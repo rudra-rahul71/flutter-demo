@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-import 'package:plaid_flutter/plaid_flutter.dart';
+import 'package:flutter_tester/main.dart';
+import 'package:flutter_tester/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -39,10 +37,11 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
-  // A string to hold the data fetched from the API.
-  // It defaults to a prompt for the user.
+
   String? accessToken;
+  // List<String>? accessTokens;
   bool _isLoading = false;
+  final ApiService _apiService = getIt<ApiService>();
 
   @override
   void initState() {
@@ -62,49 +61,12 @@ class _ProfilePageState extends State<ProfilePage> {
       _isLoading = true;
     });
 
-    try {
-      final url = Uri.parse('http://10.0.2.2:8080/init');
+    await _apiService.initPlaidIntegration();
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    accessToken = prefs.getString('accessToken');
 
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        LinkTokenConfiguration configuration = LinkTokenConfiguration(
-            token: data['link_token'],
-        );
-        await PlaidLink.create(configuration: configuration);
-        PlaidLink.onSuccess.listen((LinkSuccess event) async {
-          final publicToken = event.toJson()['publicToken'];
-          final url2 = Uri.parse('http://10.0.2.2:8080/create/$publicToken');
-
-          final response2 = await http.get(url2);
-
-          if (response2.statusCode == 200) {
-            final data2 = json.decode(response2.body);
-            if(data2 != null && data2['access_token'] != null) {
-              final SharedPreferences prefs = await SharedPreferences.getInstance();
-              await prefs.setString('accessToken', data2['access_token']);
-              setState(() {
-                accessToken = data2['access_token'];
-              });
-            }
-          }
-        });
-        PlaidLink.open();
-        setState(() {
-          // _apiResponse = 'Title: ${data['title']}\n\nBody: ${data['body']}';
-        });
-      } else {
-        throw Exception('Failed to load data from the API');
-      }
-    } catch (e) {
-      setState(() {
-
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    setState(() {
+      _isLoading = false;
+    });
   }
 }

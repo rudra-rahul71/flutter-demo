@@ -1,7 +1,8 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:flutter_tester/features/profile.dart';
+import 'package:flutter_tester/main.dart';
+import 'package:flutter_tester/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -37,15 +38,70 @@ class _HomePageState extends State<HomePage> {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: _isLoading ? [CircularProgressIndicator()] :
-                    accessToken != null ? [Text(accessToken!)] : [Text("Go to Profile and set up Plaid integration!")],
+          children: <Widget>[
+            if (_isLoading)
+              const CircularProgressIndicator()
+            else if (accounts == null)
+              const Text("Go to Profile and set up Plaid integration!")
+            else
+            Expanded(
+              child: Column(
+                children: [
+                  AspectRatio(
+                    aspectRatio: 2,
+                    child: PieChart(
+                      PieChartData(
+                        sections: accounts.map<PieChartSectionData>((account) {
+                          // Ensure the value is a double and handle potential nulls
+                          final value = (account['balances']['available'] as num?)?.toDouble() ?? 0.0;
+                    
+                          return PieChartSectionData(
+                            value: value,
+                            // You'll likely want to add other properties here for a better UI
+                            title: '\$${value.toStringAsFixed(2)}', // Example: display the value
+                            // color: getRandomColor(), // Example: assign a random color
+                            radius: 20,
+                            titleStyle: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xffffffff),
+                            ),
+                          );
+                        }).toList()
+                      )
+                    ),
+                  ),
+                  Text(item['institution_name']),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: accounts.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        // Replace this with your actual list item widget
+                        final account = accounts[index];
+                        return Card(
+                          child: ListTile(
+                            title: Text(account['name']), // Example property
+                            subtitle: Text(account['official_name']), // Example property
+                            trailing: Text(account['balances']['available'].toString()), // Example property
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              )
+            )
+          ],
         )
       )
     );
   }
 
   String? accessToken;
+  dynamic accounts;
+  dynamic item;
   bool _isLoading = false;
+
+  final ApiService _apiService = getIt<ApiService>();
 
   @override
   void initState() {
@@ -75,25 +131,12 @@ class _HomePageState extends State<HomePage> {
       _isLoading = true;
     });
 
-    final url = Uri.parse('http://10.0.2.2:8080/balance');
+    await _apiService.checkAccountBalance(accessToken!);
+    accounts = _apiService.accounts;
+    item = _apiService.item;
 
-    final response = await http.get(url);
-
-    try {
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        print(data['accounts']);
-      } else {
-        throw Exception('Failed to check account balance');
-      }
-    } catch (e) {
-      setState(() {
-        // linkToken = 'Error: $e';
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    setState(() {
+      _isLoading = false;
+    });
   }
 }

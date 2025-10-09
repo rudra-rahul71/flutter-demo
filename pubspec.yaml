@@ -37,6 +37,8 @@ dependencies:
   plaid_flutter: ^5.0.5
   http: ^1.5.0
   shared_preferences: ^2.5.3
+  fl_chart: ^1.1.1
+  get_it: ^8.2.0
 
 dev_dependencies:
   flutter_test:
