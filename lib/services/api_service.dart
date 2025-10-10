@@ -5,10 +5,8 @@ import 'package:plaid_flutter/plaid_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  dynamic accounts;
-  dynamic item;
 
-  Future<void> checkAccountBalance(String accessToken) async {
+  Future<(dynamic, dynamic)> checkAccountBalance(String accessToken) async {
     final url = Uri.parse('http://10.0.2.2:8080/balance/$accessToken');
 
     final response = await http.get(url);
@@ -16,17 +14,13 @@ class ApiService {
     try {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        accounts = data['accounts'];
-        item = data['item'];
 
-        return;
+        return (data['accounts'], data['item']);
       } else {
         throw Exception('Failed to check account balance');
       }
     } catch (e) {
-      // setState(() {
-      //   // linkToken = 'Error: $e';
-      // });
+      throw Exception('Failed to check account balance');
     }
   }
 
@@ -68,9 +62,7 @@ class ApiService {
         throw Exception('Failed to load data from the API');
       }
     } catch (e) {
-      // setState(() {
-
-      // });
+      throw Exception('Failed to load data from the API');
     }
   }
 }

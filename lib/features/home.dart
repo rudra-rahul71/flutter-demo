@@ -52,14 +52,11 @@ class _HomePageState extends State<HomePage> {
                     child: PieChart(
                       PieChartData(
                         sections: accounts.map<PieChartSectionData>((account) {
-                          // Ensure the value is a double and handle potential nulls
                           final value = (account['balances']['available'] as num?)?.toDouble() ?? 0.0;
                     
                           return PieChartSectionData(
                             value: value,
-                            // You'll likely want to add other properties here for a better UI
-                            title: '\$${value.toStringAsFixed(2)}', // Example: display the value
-                            // color: getRandomColor(), // Example: assign a random color
+                            title: '\$${value.toStringAsFixed(2)}',
                             radius: 20,
                             titleStyle: TextStyle(
                               fontWeight: FontWeight.bold,
@@ -75,13 +72,12 @@ class _HomePageState extends State<HomePage> {
                     child: ListView.builder(
                       itemCount: accounts.length,
                       itemBuilder: (BuildContext context, int index) {
-                        // Replace this with your actual list item widget
                         final account = accounts[index];
                         return Card(
                           child: ListTile(
-                            title: Text(account['name']), // Example property
-                            subtitle: Text(account['official_name']), // Example property
-                            trailing: Text(account['balances']['available'].toString()), // Example property
+                            title: Text(account['name']),
+                            subtitle: Text(account['official_name']),
+                            trailing: Text(account['balances']['available'].toString()),
                           ),
                         );
                       },
@@ -131,9 +127,9 @@ class _HomePageState extends State<HomePage> {
       _isLoading = true;
     });
 
-    await _apiService.checkAccountBalance(accessToken!);
-    accounts = _apiService.accounts;
-    item = _apiService.item;
+    final (accounts, item) = await _apiService.checkAccountBalance(accessToken!);
+    this.accounts = accounts;
+    this.item = item;
 
     setState(() {
       _isLoading = false;
