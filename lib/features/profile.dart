@@ -18,7 +18,7 @@ class _ProfilePageState extends State<ProfilePage> {
          mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           _isLoading ? CircularProgressIndicator() :
-          accessToken != null ? Text("Profile Setup Complete") : ElevatedButton(
+          accessTokens != null ? Text("Profile Setup Complete") : ElevatedButton(
             onPressed: _initPlaidIntegration,
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.onPrimary,
@@ -31,8 +31,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  String? accessToken;
-  // List<String>? accessTokens;
+  List<String>? accessTokens;
   bool _isLoading = false;
   final ApiService _apiService = getIt<ApiService>();
 
@@ -45,7 +44,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadPrefs() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      accessToken = prefs.getString('accessToken');
+      accessTokens = prefs.getStringList('accessTokens');
     });
   }
 
@@ -56,9 +55,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
     await _apiService.initPlaidIntegration();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    accessToken = prefs.getString('accessToken');
 
     setState(() {
+      accessTokens = prefs.getStringList('accessTokens');
       _isLoading = false;
     });
   }

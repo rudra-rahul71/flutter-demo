@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tester/features/home.dart';
 import 'package:flutter_tester/features/profile.dart';
 import 'package:flutter_tester/services/api_service.dart';
+import 'package:flutter_tester/structure.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
@@ -36,28 +37,7 @@ final GoRouter _router = GoRouter(
   routes: <RouteBase>[
     ShellRoute(
       builder: (BuildContext context, GoRouterState state, Widget child) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Finance Tracker'),
-            centerTitle: true,
-            backgroundColor: Theme.of(context).colorScheme.onPrimary,
-          ),
-          body: child,
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: 0,
-            destinations: const [
-              NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
-              NavigationDestination(icon: Icon(Icons.account_circle), label: 'Profile')
-            ],
-            onDestinationSelected: (value) async => {
-              if(value == 0) {
-                context.go('/')
-              } else {
-                context.go('/profile')
-              }
-            },
-          ),
-        );
+        return ScaffoldStruct(child: child);
       },
 
       routes: <RouteBase>[

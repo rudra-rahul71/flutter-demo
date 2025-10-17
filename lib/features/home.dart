@@ -20,7 +20,7 @@ class _HomePageState extends State<HomePage> {
         children: <Widget>[
           if (_isLoading)
             const CircularProgressIndicator()
-          else if (accounts == null)
+          else if (accessTokens == null)
             const Text("Go to Profile and set up Plaid integration!")
           else
           Expanded(
@@ -46,7 +46,6 @@ class _HomePageState extends State<HomePage> {
                     )
                   ),
                 ),
-                Text(item['institution_name']),
                 Expanded(
                   child: ListView.builder(
                     itemCount: accounts.length,
@@ -70,9 +69,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  String? accessToken;
-  dynamic accounts;
-  dynamic item;
+  List<String>? accessTokens;
+  List<dynamic> accounts = [];
+  List<dynamic> items = [];
   bool _isLoading = false;
 
   final ApiService _apiService = getIt<ApiService>();
@@ -89,10 +88,9 @@ class _HomePageState extends State<HomePage> {
     });
 
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    accessToken = prefs.getString('accessToken');
-    // prefs.remove('accessToken');
+    accessTokens = prefs.getStringList('accessTokens');
 
-    if (accessToken != null) {
+    if (accessTokens!.isNotEmpty) {
       _checkAccountBalance();
     } else {
       setState(() {
@@ -106,9 +104,13 @@ class _HomePageState extends State<HomePage> {
       _isLoading = true;
     });
 
-    final (accounts, item) = await _apiService.checkAccountBalance(accessToken!);
-    this.accounts = accounts;
-    this.item = item;
+    for (dynamic token in accessTokens!) {
+      final (accounts, item) = await _apiService.checkAccountBalance(token);
+      for (dynamic account in accounts) {
+        this.accounts.add(account);
+      }
+      items.add(item);
+    }
 
     setState(() {
       _isLoading = false;

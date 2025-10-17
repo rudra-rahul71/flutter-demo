@@ -46,12 +46,10 @@ class ApiService {
             final data2 = json.decode(response2.body);
             if(data2 != null && data2['access_token'] != null) {
               final SharedPreferences prefs = await SharedPreferences.getInstance();
-              // final List<String> tokens = prefs.getStringList('accessTokens') ?? [];
-              // tokens.add(data2['access_token']);
+              final List<String> tokens = prefs.getStringList('accessTokens') ?? [];
+              tokens.add(data2['access_token']);
               
-              // await prefs.setStringList('accessTokens', tokens);
-              await prefs.setString('accessToken', data2['access_token']);
-              await checkAccountBalance(data2['access_token']);
+              await prefs.setStringList('accessTokens', tokens);
 
               return;
             }
