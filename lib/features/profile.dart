@@ -13,27 +13,20 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        centerTitle: true,
-        backgroundColor: Theme.of(context).colorScheme.onPrimary,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            _isLoading ? CircularProgressIndicator() :
-            accessToken != null ? Text("Profile Setup Complete") : ElevatedButton(
-              onPressed: _initPlaidIntegration,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.onPrimary,
-                foregroundColor: Theme.of(context).colorScheme.inverseSurface,
-              ),
-              child: const Text('Integrate with Plaid'),
+    return Center(
+      child: Column(
+         mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          _isLoading ? CircularProgressIndicator() :
+          accessToken != null ? Text("Profile Setup Complete") : ElevatedButton(
+            onPressed: _initPlaidIntegration,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.onPrimary,
+              foregroundColor: Theme.of(context).colorScheme.inverseSurface,
             ),
-          ],
-        ),
+            child: const Text('Integrate with Plaid'),
+          ),
+        ],
       ),
     );
   }
