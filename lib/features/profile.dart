@@ -17,20 +17,37 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
          mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          _isLoading ? CircularProgressIndicator() :
-          accessTokens != null ? Text("Profile Setup Complete") : ElevatedButton(
-            onPressed: _initPlaidIntegration,
+          if (_isLoading)
+            CircularProgressIndicator(),
+          if(!_isLoading)
+            Expanded(
+              child: ListView.builder(
+                itemCount: items.length,
+                itemBuilder: (BuildContext context, int index) {
+                  final item = items[index];
+                  return Card(
+                    child: ListTile(
+                      title: Text(item['institution_name'])
+                    ),
+                  );
+                },
+              )
+            ),
+
+          ElevatedButton(
+            onPressed: _isLoading ? null : _initPlaidIntegration,
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.onPrimary,
               foregroundColor: Theme.of(context).colorScheme.inverseSurface,
             ),
-            child: const Text('Integrate with Plaid'),
+            child: const Text('Connect to Financial Institution'),
           ),
         ],
       ),
     );
   }
 
+  List<dynamic> items = [];
   List<String>? accessTokens;
   bool _isLoading = false;
   final ApiService _apiService = getIt<ApiService>();
@@ -45,6 +62,18 @@ class _ProfilePageState extends State<ProfilePage> {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       accessTokens = prefs.getStringList('accessTokens');
+      if(accessTokens!.isNotEmpty) {
+        _isLoading = true;
+      }
+    });
+
+    for (dynamic token in accessTokens!) {
+      final (accounts, item) = await _apiService.checkAccountBalance(token);
+      items.add(item);
+    }
+
+    setState(() {
+      _isLoading = false;
     });
   }
 

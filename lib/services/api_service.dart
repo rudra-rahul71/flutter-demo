@@ -24,6 +24,24 @@ class ApiService {
     }
   }
 
+  Future<(dynamic, dynamic, dynamic)> getTransactions(String accessToken) async {
+    final url = Uri.parse('http://10.0.2.2:8080/transactions/$accessToken');
+
+    final response = await http.get(url);
+
+    try {
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        return (data['accounts'], data['transactions'], data['total_transactions']);
+      } else {
+        throw Exception('Failed to check account balance');
+      }
+    } catch (e) {
+      throw Exception('Failed to check account balance');
+    }
+  }
+
   Future<void> initPlaidIntegration() async {
     try {
       final url = Uri.parse('http://10.0.2.2:8080/init');

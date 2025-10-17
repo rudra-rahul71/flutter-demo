@@ -51,7 +51,28 @@ class _HomePageState extends State<HomePage> {
                     itemCount: accounts.length,
                     itemBuilder: (BuildContext context, int index) {
                       final account = accounts[index];
-                      return Card(
+                      return account['subtype'] == 'credit card' ? Card(
+                        color: Theme.of(context).colorScheme.onError,
+                        child: ListTile(
+                          title: Text(account['name']),
+                          subtitle: Text(account['official_name']),
+                          trailing: Text(account['balances']['current'].toString()),
+                        ),
+                      ) : account['subtype'] == 'savings' ? Card(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        child: ListTile(
+                          title: Text(account['name']),
+                          subtitle: Text(account['official_name']),
+                          trailing: Text(account['balances']['available'].toString()),
+                        ),
+                      ) : account['subtype'] == 'checking' ? Card(
+                        color: Theme.of(context).colorScheme.onTertiary,
+                        child: ListTile(
+                          title: Text(account['name']),
+                          subtitle: Text(account['official_name']),
+                          trailing: Text(account['balances']['available'].toString()),
+                        ),
+                      ) : Card(
                         child: ListTile(
                           title: Text(account['name']),
                           subtitle: Text(account['official_name']),
@@ -71,7 +92,7 @@ class _HomePageState extends State<HomePage> {
 
   List<String>? accessTokens;
   List<dynamic> accounts = [];
-  List<dynamic> items = [];
+  List<dynamic> transactions = [];
   bool _isLoading = false;
 
   final ApiService _apiService = getIt<ApiService>();
@@ -91,7 +112,7 @@ class _HomePageState extends State<HomePage> {
     accessTokens = prefs.getStringList('accessTokens');
 
     if (accessTokens!.isNotEmpty) {
-      _checkAccountBalance();
+      _getTransactions();
     } else {
       setState(() {
         _isLoading = false;
@@ -99,17 +120,19 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> _checkAccountBalance() async {
+  Future<void> _getTransactions() async {
     setState(() {
       _isLoading = true;
     });
 
     for (dynamic token in accessTokens!) {
-      final (accounts, item) = await _apiService.checkAccountBalance(token);
+      final (accounts, transactions, total) = await _apiService.getTransactions(token);
       for (dynamic account in accounts) {
         this.accounts.add(account);
       }
-      items.add(item);
+      for (dynamic transaction in transactions) {
+        this.transactions.add(transaction);
+      }
     }
 
     setState(() {
