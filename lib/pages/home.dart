@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_tester/features/home_widget.dart';
 import 'package:flutter_tester/main.dart';
 import 'package:flutter_tester/models/transaction_data.dart';
 import 'package:flutter_tester/services/api_service.dart';
@@ -27,58 +28,28 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: Column(
               children: [
-                AspectRatio(
-                  aspectRatio: 2,
-                  child: PieChart(
-                    PieChartData(
-                      centerSpaceRadius: 0,
-                      sections: accounts.map<PieChartSectionData>((account) {
-                        final value = (account['balances']['available'] as num?)?.toDouble() ?? 0.0;
-                        return PieChartSectionData(
-                          value: value,
-                          title: '\$${value.toStringAsFixed(2)}',
-                          radius: 90,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.primary,
-                            width: 2
-                          ),
-                        );
-                      }).toList()
-                    )
-                  ),
-                ),
-                ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: transactionData.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    final entry = transactionData[index];
+                HomeWidget(accounts: accounts),
+                ...transactionData.map((entry) {
                     return ExpansionTile(
                       title: Text(entry.item['institution_name']),
                       subtitle: Text('${entry.accounts.length} connected accounts'),
                       children: <Widget>[
-                        ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: entry.accounts.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            final account = entry.accounts[index];
-                            return Card(
-                              color: account['subtype'] == 'credit card' ? Theme.of(context).colorScheme.onError
-                                    : account['subtype'] == 'savings' ? Theme.of(context).colorScheme.onPrimary
-                                    : account['subtype'] == 'checking' ? Theme.of(context).colorScheme.onTertiary : null,
-                              child: ListTile(
-                                title: Text(account['name']),
-                                subtitle: Text(account['official_name']),
-                                trailing: account['subtype'] == 'credit card' ? Text(account['balances']['current'].toString())
-                                          : Text(account['balances']['available'].toString()),
-                              ),
-                            );
-                          },
-                        ),
+                        ...entry.accounts.map((account) {
+                          return Card(
+                            color: account['subtype'] == 'credit card' ? Theme.of(context).colorScheme.onError
+                              : account['subtype'] == 'savings' ? Theme.of(context).colorScheme.onPrimary
+                              : account['subtype'] == 'checking' ? Theme.of(context).colorScheme.onTertiary : null,
+                            child: ListTile(
+                              title: Text(account['name']),
+                              subtitle: Text(account['official_name']),
+                              trailing: account['subtype'] == 'credit card' ? Text(account['balances']['current'].toString())
+                                : Text(account['balances']['available'].toString()),
+                            )
+                          );
+                        }),
                       ],
                     );
-                  }
-                )
+                }),
               ],
             )
           )

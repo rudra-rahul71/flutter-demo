@@ -17,22 +17,16 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
          mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          if (_isLoading)
+          if(_isLoading)
             CircularProgressIndicator(),
           if(!_isLoading)
-            Expanded(
-              child: ListView.builder(
-                itemCount: items.length,
-                itemBuilder: (BuildContext context, int index) {
-                  final item = items[index];
-                  return Card(
-                    child: ListTile(
-                      title: Text(item['institution_name'])
-                    ),
-                  );
-                },
-              )
-            ),
+          ...items.map((item) {
+            return Card(
+              child: ListTile(
+                title: Text(item['institution_name']),
+              ),
+            );
+          }),
 
           ElevatedButton(
             onPressed: _isLoading ? null : _initPlaidIntegration,
