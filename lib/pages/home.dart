@@ -1,4 +1,3 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tester/features/home_widget.dart';
 import 'package:flutter_tester/main.dart';
@@ -16,6 +15,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
+    final double height = MediaQuery.sizeOf(context).height;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -28,7 +28,10 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: Column(
               children: [
-                HomeWidget(accounts: accounts),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: height / 4),
+                  child: HomeWidget(accounts: accounts),
+                ),
                 ...transactionData.map((entry) {
                     return ExpansionTile(
                       title: Text(entry.item['institution_name']),
