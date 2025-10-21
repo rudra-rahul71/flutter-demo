@@ -31,16 +31,17 @@ class _HomePageState extends State<HomePage> {
                   aspectRatio: 2,
                   child: PieChart(
                     PieChartData(
+                      centerSpaceRadius: 0,
                       sections: accounts.map<PieChartSectionData>((account) {
                         final value = (account['balances']['available'] as num?)?.toDouble() ?? 0.0;
-                    
                         return PieChartSectionData(
                           value: value,
                           title: '\$${value.toStringAsFixed(2)}',
-                          radius: 20,
-                          titleStyle: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xffffffff),
+                          radius: 90,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 2
                           ),
                         );
                       }).toList()
@@ -125,6 +126,7 @@ class _HomePageState extends State<HomePage> {
       final response = await _apiService.getTransactions(token);
 
       for (dynamic account in response.accounts) {
+        account['color'] = '';
         accounts.add(account);
       }
 

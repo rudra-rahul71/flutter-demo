@@ -1,7 +1,7 @@
 // routes.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_tester/features/home.dart';
-import 'package:flutter_tester/features/profile.dart';
+import 'package:flutter_tester/pages/home.dart';
+import 'package:flutter_tester/pages/profile.dart';
 
 class AppRoutes {
   static const String home = '/';

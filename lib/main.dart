@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_tester/features/home.dart';
-import 'package:flutter_tester/features/profile.dart';
+import 'package:flutter_tester/pages/home.dart';
+import 'package:flutter_tester/pages/profile.dart';
 import 'package:flutter_tester/services/api_service.dart';
 import 'package:flutter_tester/structure.dart';
 import 'package:get_it/get_it.dart';
