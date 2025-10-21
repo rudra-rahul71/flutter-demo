@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tester/main.dart';
+import 'package:flutter_tester/models/transaction_data.dart';
 import 'package:flutter_tester/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -46,42 +47,37 @@ class _HomePageState extends State<HomePage> {
                     )
                   ),
                 ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: accounts.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      final account = accounts[index];
-                      return account['subtype'] == 'credit card' ? Card(
-                        color: Theme.of(context).colorScheme.onError,
-                        child: ListTile(
-                          title: Text(account['name']),
-                          subtitle: Text(account['official_name']),
-                          trailing: Text(account['balances']['current'].toString()),
+                ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: transactionData.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    final entry = transactionData[index];
+                    return ExpansionTile(
+                      title: Text(entry.item['institution_name']),
+                      subtitle: Text('${entry.accounts.length} connected accounts'),
+                      children: <Widget>[
+                        ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: entry.accounts.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final account = entry.accounts[index];
+                            return Card(
+                              color: account['subtype'] == 'credit card' ? Theme.of(context).colorScheme.onError
+                                    : account['subtype'] == 'savings' ? Theme.of(context).colorScheme.onPrimary
+                                    : account['subtype'] == 'checking' ? Theme.of(context).colorScheme.onTertiary : null,
+                              child: ListTile(
+                                title: Text(account['name']),
+                                subtitle: Text(account['official_name']),
+                                trailing: account['subtype'] == 'credit card' ? Text(account['balances']['current'].toString())
+                                          : Text(account['balances']['available'].toString()),
+                              ),
+                            );
+                          },
                         ),
-                      ) : account['subtype'] == 'savings' ? Card(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                        child: ListTile(
-                          title: Text(account['name']),
-                          subtitle: Text(account['official_name']),
-                          trailing: Text(account['balances']['available'].toString()),
-                        ),
-                      ) : account['subtype'] == 'checking' ? Card(
-                        color: Theme.of(context).colorScheme.onTertiary,
-                        child: ListTile(
-                          title: Text(account['name']),
-                          subtitle: Text(account['official_name']),
-                          trailing: Text(account['balances']['available'].toString()),
-                        ),
-                      ) : Card(
-                        child: ListTile(
-                          title: Text(account['name']),
-                          subtitle: Text(account['official_name']),
-                          trailing: Text(account['balances']['available'].toString()),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+                      ],
+                    );
+                  }
+                )
               ],
             )
           )
@@ -91,8 +87,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<String>? accessTokens;
+  List<TransactionData> transactionData = [];
   List<dynamic> accounts = [];
-  List<dynamic> transactions = [];
   bool _isLoading = false;
 
   final ApiService _apiService = getIt<ApiService>();
@@ -126,13 +122,13 @@ class _HomePageState extends State<HomePage> {
     });
 
     for (dynamic token in accessTokens!) {
-      final (accounts, transactions, total) = await _apiService.getTransactions(token);
-      for (dynamic account in accounts) {
-        this.accounts.add(account);
+      final response = await _apiService.getTransactions(token);
+
+      for (dynamic account in response.accounts) {
+        accounts.add(account);
       }
-      for (dynamic transaction in transactions) {
-        this.transactions.add(transaction);
-      }
+
+      transactionData.add(response);
     }
 
     setState(() {

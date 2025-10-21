@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_tester/models/transaction_data.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:plaid_flutter/plaid_flutter.dart';
@@ -24,7 +25,7 @@ class ApiService {
     }
   }
 
-  Future<(dynamic, dynamic, dynamic)> getTransactions(String accessToken) async {
+  Future<TransactionData> getTransactions(String accessToken) async {
     final url = Uri.parse('http://10.0.2.2:8080/transactions/$accessToken');
 
     final response = await http.get(url);
@@ -33,7 +34,7 @@ class ApiService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
 
-        return (data['accounts'], data['transactions'], data['total_transactions']);
+        return TransactionData.fromJson(data);
       } else {
         throw Exception('Failed to check account balance');
       }
