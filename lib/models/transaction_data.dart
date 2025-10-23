@@ -1,7 +1,7 @@
 class TransactionData {
 
   final dynamic accounts;
-  final dynamic transactions;
+  final List<dynamic> transactions;
   final dynamic item;
   final dynamic totalTransactions;
 

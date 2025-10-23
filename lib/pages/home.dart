@@ -15,7 +15,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
-    final double height = MediaQuery.sizeOf(context).height;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -28,31 +27,34 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: Column(
               children: [
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: height / 4),
-                  child: HomeWidget(accounts: accounts),
-                ),
-                ...transactionData.map((entry) {
-                    return ExpansionTile(
-                      title: Text(entry.item['institution_name']),
-                      subtitle: Text('${entry.accounts.length} connected accounts'),
-                      children: <Widget>[
-                        ...entry.accounts.map((account) {
-                          return Card(
-                            color: account['subtype'] == 'credit card' ? Theme.of(context).colorScheme.onError
-                              : account['subtype'] == 'savings' ? Theme.of(context).colorScheme.onPrimary
-                              : account['subtype'] == 'checking' ? Theme.of(context).colorScheme.onTertiary : null,
-                            child: ListTile(
-                              title: Text(account['name']),
-                              subtitle: Text(account['official_name']),
-                              trailing: account['subtype'] == 'credit card' ? Text(account['balances']['current'].toString())
-                                : Text(account['balances']['available'].toString()),
-                            )
+                HomeWidget(transactionData: transactionData, accounts: accounts),
+                Expanded(
+                  child: ListView(
+                    children: [
+                      ...transactionData.map((entry) {
+                          return ExpansionTile(
+                            title: Text(entry.item['institution_name']),
+                            subtitle: Text('${entry.accounts.length} connected accounts'),
+                            children: <Widget>[
+                              ...entry.accounts.map((account) {
+                                return Card(
+                                  color: account['subtype'] == 'credit card' ? Theme.of(context).colorScheme.onError
+                                    : account['subtype'] == 'savings' ? Theme.of(context).colorScheme.onPrimary
+                                    : account['subtype'] == 'checking' ? Theme.of(context).colorScheme.onTertiary : null,
+                                  child: ListTile(
+                                    title: Text(account['name']),
+                                    subtitle: Text(account['official_name']),
+                                    trailing: account['subtype'] == 'credit card' ? Text(account['balances']['current'].toString())
+                                      : Text(account['balances']['available'].toString()),
+                                  )
+                                );
+                              }),
+                            ],
                           );
-                        }),
-                      ],
-                    );
-                }),
+                      }),
+                    ],
+                  ),
+                ),
               ],
             )
           )
@@ -100,7 +102,6 @@ class _HomePageState extends State<HomePage> {
       final response = await _apiService.getTransactions(token);
 
       for (dynamic account in response.accounts) {
-        account['color'] = '';
         accounts.add(account);
       }
 
