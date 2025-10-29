@@ -2,22 +2,22 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tester/models/transaction_data.dart';
 
-class TransactionHistory extends StatefulWidget {
+class BalanceTracker extends StatefulWidget {
   final List<TransactionData> transactionData;
 
-  const TransactionHistory({
+  const BalanceTracker({
     super.key,
     this.transactionData = const [],
   });
 
   @override
-  State<TransactionHistory> createState() => _TransactionHistoryState();
+  State<BalanceTracker> createState() => _BalanceTrackerState();
 }
 
-class _TransactionHistoryState extends State<TransactionHistory> {
+class _BalanceTrackerState extends State<BalanceTracker> {
 
+  final Map<String, (String, (dynamic, dynamic))> accounts = {};
   final Map<String, List<(double, double)>> _groupedTransactions = {};
-  final Map<String, (String, dynamic)> accounts = {};
 
   @override
   void initState() {
@@ -25,43 +25,52 @@ class _TransactionHistoryState extends State<TransactionHistory> {
 
     for (var item in widget.transactionData) {
       for(var account in item.accounts) {
-        accounts[account['account_id']] = (account['name'], item.item);
+        if(account['subtype'] == 'checking' || account['subtype'] == 'savings') {
+          accounts[account['account_id']] = (account['name'], (item.item, account));
+        }
       }
+
       for (var transaction in item.transactions) {
         final String? accountId = transaction['account_id'];
-        final DateTime? date = DateTime.tryParse(transaction['date'] ?? '');
-        final double amount = (transaction['amount'] as num? ?? 0.0).toDouble();
+        if(accounts[accountId] != null) {
+          final DateTime? date = DateTime.tryParse(transaction['date'] ?? '');
+          final double amount = (transaction['amount'] as num? ?? 0.0).toDouble();
 
-        if (accountId == null || date == null || amount < 0) {
-          continue; 
+          if (accountId == null || date == null) {
+            continue;
+          }
+
+          final double dateEpoch = date.microsecondsSinceEpoch.toDouble();
+
+          _groupedTransactions
+              .putIfAbsent(accountId, () => [])
+              .add((dateEpoch, amount));
         }
-
-        final double dateEpoch = date.microsecondsSinceEpoch.toDouble();
-
-        _groupedTransactions
-            .putIfAbsent(accountId, () => [])
-            .add((dateEpoch, amount));
       }
     }
 
     for (var entry in _groupedTransactions.entries) {
       List<(double, double)> transactions = entry.value;
-      transactions.sort((a, b) => a.$1.compareTo(b.$1));
 
-      if(DateTime.fromMicrosecondsSinceEpoch(transactions[0].$1.toInt()).day != 1) {
-        transactions.insert(0, (DateTime(DateTime.now().year, DateTime.now().month, 1).microsecondsSinceEpoch.toDouble(), 0.0));
-      }
-
-      if(DateTime.fromMicrosecondsSinceEpoch(transactions[transactions.length - 1].$1.toInt()).day != DateTime.now().day) {
-        double today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day).microsecondsSinceEpoch.toDouble();
-        transactions.add((today, 0.0));
-      }
-
-      double runningTotal = 0.0;
+      double currentBalance = (accounts[entry.key]!.$2.$2['balances']['available'] as num).toDouble();
       List<(double, double)> cumulativeList = [];
+      //add $0 charge to the last day if there isnt one
+      if(DateTime.fromMicrosecondsSinceEpoch(transactions[0].$1.toInt()).day != DateTime.now().day) {
+        double today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day).microsecondsSinceEpoch.toDouble();
+        transactions.insert(0, (today, 0.0));
+      }
+
+      //discard transaction on first of the month if there is one
+      if(DateTime.fromMicrosecondsSinceEpoch(transactions[transactions.length - 1].$1.toInt()).day == 1) {
+        transactions.removeAt(transactions.length - 1);
+      }
+
+      double test = DateTime(DateTime.now().year, DateTime.now().month, 1).microsecondsSinceEpoch.toDouble();
+      transactions.add((test, 0.0));
+
       for (var x in transactions) {
-        runningTotal += x.$2;
-        cumulativeList.add((x.$1, runningTotal));
+        cumulativeList.add((x.$1, currentBalance));
+        currentBalance += x.$2;
       }
       _groupedTransactions.update(entry.key, (current) {
         return cumulativeList;
@@ -71,7 +80,6 @@ class _TransactionHistoryState extends State<TransactionHistory> {
 
   @override
   Widget build(BuildContext context) {
-
     final accountEntries = _groupedTransactions.entries.toList();
 
     if (accountEntries.isEmpty) {
@@ -82,6 +90,7 @@ class _TransactionHistoryState extends State<TransactionHistory> {
       aspectRatio: 1,
       child: LineChart(
         LineChartData(
+          backgroundColor: Theme.of(context).colorScheme.onPrimary,
           titlesData: FlTitlesData(
             leftTitles: AxisTitles(
               axisNameWidget: RotatedBox(
@@ -117,14 +126,13 @@ class _TransactionHistoryState extends State<TransactionHistory> {
               sideTitles: SideTitles(
                 showTitles: true,
                 reservedSize: 70,
-                interval: 700,
+                interval: 400,
                 getTitlesWidget: (value, meta) {
                   return Text('  \$${value.toStringAsFixed(2)}');
                 },
               ),
             ),
           ),
-          backgroundColor: Theme.of(context).colorScheme.onPrimary,
           lineTouchData: LineTouchData(
             touchTooltipData: LineTouchTooltipData(
               fitInsideVertically: true,
@@ -137,7 +145,7 @@ class _TransactionHistoryState extends State<TransactionHistory> {
                   final String formattedDate = '${date.month}/${date.day}';
 
                   final String amount = '\$${touchedSpot.y.toStringAsFixed(2)}';
-                  final String account = '${accounts[accountId]!.$2['institution_name']}\n';
+                  final String account = '${accounts[accountId]!.$2.$1['institution_name']}\n';
                   final String body = '$formattedDate\n$amount';
 
                   final TextStyle textStyle = TextStyle(
@@ -196,8 +204,8 @@ class _TransactionHistoryState extends State<TransactionHistory> {
               );
             }),
           ],
-        ),
-      ),
+        )
+      )
     );
   }
 }

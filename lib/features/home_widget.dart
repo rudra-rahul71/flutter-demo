@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tester/features/balance_tracker.dart';
 import 'package:flutter_tester/features/financial_overview.dart';
+import 'package:flutter_tester/features/spending_category.dart';
 import 'package:flutter_tester/features/transaction_history.dart';
 import 'package:flutter_tester/models/transaction_data.dart';
 
@@ -26,7 +28,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
 
     _transactionData = widget.transactionData;
     _accounts = widget.accounts;
@@ -47,12 +49,14 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                 onPageChanged: (value) {
                   _tabController.index = value;
                   setState(() {
-                    title = value == 0 ? 'Financial Overview' : 'Total Money Spent';
+                    title = value == 0 ? 'Financial Overview' : value == 1 ? 'Total Money Spent' : value == 2 ? 'Balance tracker' : 'Spending by Catregory';
                   });
                 },
                 children: [
                   FinancialOverview(accounts: _accounts),
                   TransactionHistory(transactionData: _transactionData),
+                  BalanceTracker(transactionData: _transactionData),
+                  SpendingCategory(),
                 ],
               ),
               PageIndicator(
