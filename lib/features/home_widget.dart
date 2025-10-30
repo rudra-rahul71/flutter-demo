@@ -56,7 +56,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                   FinancialOverview(accounts: _accounts),
                   TransactionHistory(transactionData: _transactionData),
                   BalanceTracker(transactionData: _transactionData),
-                  SpendingCategory(),
+                  SpendingCategory(transactionData: _transactionData),
                 ],
               ),
               PageIndicator(
